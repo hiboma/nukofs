@@ -125,10 +125,8 @@ static int nukofs_fill_super(struct super_block *sb, void *data, int silent)
 
 	/* init root inode */
 	inode = iget_locked(sb, 0);
-	if (!inode) {
-		printk(KERN_INFO "ilookup failed");
+	if (!inode)
 		goto failed;
-	}
 
 	inode->i_mode = 0777;
 	inode->i_mode |= S_IFDIR;
@@ -142,10 +140,9 @@ static int nukofs_fill_super(struct super_block *sb, void *data, int silent)
 	inode->i_generation = get_seconds();
 	root = d_alloc_root(inode);
 
-	if(!root) {
-		printk(KERN_INFO "d_alloc_root failed");
+	if(!root)
 		goto failed_iput;
-	}
+
 	sb->s_root = root;
 	
 	return 0;
@@ -174,8 +171,6 @@ static int nukofs_init(void)
 {
 	int err = 0;
 	
-	printk(KERN_INFO "Hello world 1.\n");
-	
 	err = bdi_init(&nukofs_backing_dev_info);
 	if (err)
 		return err;
@@ -193,7 +188,6 @@ static void nukofs_exit(void)
 	bdi_destroy(&nukofs_backing_dev_info);
 	nukofs_destroy_inode_cachep();
 	unregister_filesystem(&nukofs_fs_type);
-	printk(KERN_INFO "Goodbye world 1.\n");
 }
 
 module_init(nukofs_init);
