@@ -75,6 +75,38 @@ static inline struct nukofs_inode_info *NUKOFS_INODE_INFO(struct inode *inode)
 
 static struct kmem_cache *nukofs_inode_cachep;
 
+/* taken from ramfs_get_inode */
+struct inode *nukofs_get_inode(struct super_block *sb, int mode, dev_t dev)
+{
+	struct inode *inode = new_inode(sb);
+	if (inode) {
+		inode->i_mode = mode;
+		inode->i_uid = current_fsuid();
+		inode->i_gid = current_fsgid();
+		inode->i_mapping->a_ops = &nukofs_address_space_operations;
+		inode->i_mapping->backing_dev_info = &nukofs_backing_dev_info;
+		inode->i_atime = inode->i_mtime = inode->i_ctime = CURRENT_TIME;
+		switch (mode & S_IFMT) {
+		default:
+			/* TODO */
+			break;
+		case S_IFREG:
+			inode->i_op = &nukofs_file_inode_operations;
+			inode->i_fop = &nukofs_file_operations;
+		case S_IFDIR:
+			inode->i_op = &nukofs_dir_inode_operations;
+			inode->i_fop = &simple_dir_operations;
+			/* directory inodes start off with i_nlink == 2 (for "." entry) */
+			inc_nlink(inode);
+			break;
+		case S_IFLNK:
+			/* TODO */
+			break;
+		}
+	}
+	return inode;
+}
+
 static struct inode* nukofs_alloc_inode(struct super_block *sb)
 {
 	struct nukofs_inode_info *p;
