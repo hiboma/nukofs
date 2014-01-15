@@ -117,7 +117,7 @@ static int nukofs_fill_super(struct super_block *sb, void *data, int silent)
 {
 	struct inode *inode;
 	struct dentry *root;
-	int err = -ENOSYS;
+	int err = -ENOMEM;
 
 	sb->s_blocksize = 1024;
 	sb->s_magic = 0xca10;
