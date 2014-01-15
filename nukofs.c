@@ -189,8 +189,8 @@ static int nukofs_init(void)
 static void nukofs_exit(void)
 {
 	bdi_destroy(&nukofs_backing_dev_info);
-	nukofs_destroy_inode_cachep();
 	unregister_filesystem(&nukofs_fs_type);
+	nukofs_destroy_inode_cachep();
 }
 
 module_init(nukofs_init);
