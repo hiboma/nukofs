@@ -29,7 +29,7 @@ static struct address_space_operations nukofs_address_space_operations = {
 	.write_end   = NULL,
 };
 
-static struct inode_operations nukofs_inode_operations = {
+static struct inode_operations nukofs_file_inode_operations = {
 	.getattr = NULL,
 	.setattr = NULL,
 };
