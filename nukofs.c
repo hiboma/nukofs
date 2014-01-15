@@ -175,11 +175,14 @@ static int nukofs_init(void)
 	if (err)
 		return err;
 	
-	nukofs_init_inode_cachep();
+
 	err = register_filesystem(&nukofs_fs_type);
-	if (err)
+	if (err) {
+		bdi_destroy(&nukofs_backing_dev_info);
 		return err;
-	
+    }
+
+	nukofs_init_inode_cachep();
 	return 0;
 }
 
