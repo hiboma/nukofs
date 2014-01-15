@@ -156,22 +156,11 @@ static int nukofs_fill_super(struct super_block *sb, void *data, int silent)
 	sb->s_op = &nukofs_super_operations;
 
 	/* init root inode */
-	inode = iget_locked(sb, 0);
+	inode = nukofs_get_inode(sb, 0755|S_IFDIR, 0);
 	if (!inode)
 		goto failed;
 
-	inode->i_mode = 0777;
-	inode->i_mode |= S_IFDIR;
-	inode->i_uid = 0;
-	inode->i_gid = 0;
-	inode->i_nlink = 1;
-	inode->i_op = &nukofs_dir_inode_operations;
-	inode->i_fop = &nukofs_file_operations;
-	inode->i_mapping->backing_dev_info = &nukofs_backing_dev_info;
-	inode->i_atime = inode->i_mtime = inode->i_ctime = CURRENT_TIME;
-	inode->i_generation = get_seconds();
 	root = d_alloc_root(inode);
-
 	if(!root)
 		goto failed_iput;
 
