@@ -40,3 +40,7 @@ Module.symvers
 GPATH
 GRTAGS
 GTAGS
+
+# ruby
+.bundle
+vendor/*
