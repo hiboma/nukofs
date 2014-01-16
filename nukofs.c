@@ -11,6 +11,10 @@
 static struct inode* nukofs_alloc_inode(struct super_block *sb);
 static void nukofs_destroy_inode(struct inode *inode);
 static void nukofs_put_super(struct super_block *sb);
+static int nukofs_mknod(struct inode *dir, struct dentry *dentry,
+			int mode, dev_t dev);
+static int nukofs_create(struct inode *dir, struct dentry *dentry,
+			 int mode, struct nameidata *nd);
 
 struct nukofs_inode_info {
 	struct inode vfs_inode;
@@ -35,14 +39,14 @@ static struct inode_operations nukofs_file_inode_operations = {
 };
 
 static const struct inode_operations nukofs_dir_inode_operations = {
-	.create		= NULL,
+	.create		= nukofs_create,
 	.lookup		= simple_lookup,
 	.link		= NULL,
 	.unlink		= NULL,
 	.symlink	= NULL,
 	.mkdir		= NULL,
 	.rmdir		= NULL,
-	.mknod		= NULL,
+	.mknod		= nukofs_mknod,
 	.rename		= NULL,
 };
 
@@ -179,6 +183,35 @@ static int nukofs_get_sb(struct file_system_type *fs_type,
 			 int flags, const char *dev_name, void *data, struct vfsmount *mnt)
 {
 	return get_sb_nodev(fs_type, flags, data, nukofs_fill_super, mnt);
+}
+
+static int nukofs_mknod(struct inode *dir, struct dentry *dentry,
+			int mode, dev_t dev)
+{
+	struct inode *inode = nukofs_get_inode(dir->i_sb, mode, dev);
+	/*
+	 * inodeが割り当てられない場合、RAMベースのファイルシステム的にはENOMEM
+	 * なのかもしれないけど、ユーザランドから見ればファイルシステムの空きス
+	 * ペースが無い状態に等しい?
+	 *
+	 * でも、open(2), mknod(2) で ENOMEM を返しうると man に書いてはある
+	 */
+	int error = -ENOSPC;
+
+	if (inode) {
+		d_instantiate(dentry, inode);
+		dget(dentry);
+		error = 0;
+		inode->i_mtime = inode->i_ctime = CURRENT_TIME;
+	}
+
+	return 0;
+}
+
+static int nukofs_create(struct inode *dir, struct dentry *dentry,
+			 int mode, struct nameidata *nd)
+{
+	return nukofs_mknod(dir, dentry, mode | S_IFREG, 0);
 }
 
 static struct file_system_type nukofs_fs_type = {
