@@ -14,3 +14,6 @@ reload:
 	-sudo umount /mnt/nukofs 2>/dev/null
 	-sudo make rmmod 2>/dev/null || 1
 	sudo make insmod && sudo mount -t nukofs nukofs /mnt/nukofs
+
+test:
+	sudo prove
