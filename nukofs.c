@@ -15,6 +15,7 @@ static int nukofs_mknod(struct inode *dir, struct dentry *dentry,
 			int mode, dev_t dev);
 static int nukofs_create(struct inode *dir, struct dentry *dentry,
 			 int mode, struct nameidata *nd);
+static int nukofs_mkdir(struct inode *inode,struct dentry *dentry, int mode);
 
 struct nukofs_inode_info {
 	struct inode vfs_inode;
@@ -44,8 +45,8 @@ static const struct inode_operations nukofs_dir_inode_operations = {
 	.link		= NULL,
 	.unlink		= simple_unlink,
 	.symlink	= NULL,
-	.mkdir		= NULL,
-	.rmdir		= NULL,
+	.mkdir		= nukofs_mkdir,
+	.rmdir		= simple_rmdir,
 	.mknod		= nukofs_mknod,
 	.rename		= NULL,
 };
@@ -212,6 +213,11 @@ static int nukofs_create(struct inode *dir, struct dentry *dentry,
 			 int mode, struct nameidata *nd)
 {
 	return nukofs_mknod(dir, dentry, mode | S_IFREG, 0);
+}
+
+static int nukofs_mkdir(struct inode *dir, struct dentry *dentry, int mode)
+{
+	return nukofs_mknod(dir, dentry, mode | S_IFDIR, 0);
 }
 
 static struct file_system_type nukofs_fs_type = {
