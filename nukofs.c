@@ -218,7 +218,7 @@ static struct file_system_type nukofs_fs_type = {
 	.owner   = THIS_MODULE,
 	.name    = "nukofs",
 	.get_sb  = nukofs_get_sb,
-	.kill_sb = kill_anon_super,
+	.kill_sb = kill_litter_super,
 };
 
 static int nukofs_init(void)
