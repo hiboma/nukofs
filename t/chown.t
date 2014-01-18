@@ -1,11 +1,10 @@
 use strict;
 use warnings;
+use t::Nukofs;
 use Test::More tests => 8;
 use Path::Class;
 
-BEGIN {
-    system("make reload 2>/dev/null");
-}
+t::Nukofs->reload;
 
 {
     # vagrant:vagrant = uid:500, gid:500
@@ -28,6 +27,4 @@ BEGIN {
     is $st->gid, 500, 'gid should be 500';
 }
 
-END {
-    system("make reload 2>/dev/null");
-}
+
