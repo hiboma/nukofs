@@ -5,12 +5,37 @@
 VAGRANTFILE_API_VERSION = "2"
 
 $script = <<SCRIPT
-grep -q "single-request-reopen" /etc/resolv.conf || echo "options single-request-reopen" >> /etc/resolv.conf
-rpm -q kernel-devel || rpm -ivh http://mirror.centos.org/centos/6/os/x86_64/Packages/kernel-devel-2.6.32-431.el6.x86_64.rpm
-which gcc || yum groupinstall -y 'Development Tools'
-sudo yum install -y perl-Test-Simple
-sudo mkdir -p /mnt/nukofs
-cd /vagrant && make 
+:
+: VirtualBox-CentOS6
+(
+    grep -q "single-request-reopen" /etc/resolv.conf || echo "options single-request-reopen" >> /etc/resolv.conf
+)
+
+:
+: kernel-module-development
+(
+    rpm -q kernel-devel || rpm -ivh http://mirror.centos.org/centos/6/os/x86_64/Packages/kernel-devel-2.6.32-431.el6.x86_64.rpm
+    which gcc || yum install -y 'Development Tools'
+    which git || yum install -y git
+    mkdir -p /mnt/nukofs
+)
+
+:
+: install-latest-perl
+(
+    stat /usr/local/lang/perl-5.18 || {
+        git clone https://github.com/tagomoris/xbuild.git
+        ./xbuild/perl-install 5.18.2 /usr/local/lang/perl-5.18
+        /usr/local/lang/perl-5.18/bin/cpanm install Path::Class
+    }
+
+    which prove || {
+        echo 'export PATH="/usr/local/lang/perl-5.18/bin:$PATH"' | tee /etc/profile.d/lang-perl.sh
+        # Insecure, I know
+        echo 'Defaults env_keep+="PATH"' | sudo tee /etc/sudoers.d/env_keep-PATH
+        perl -pi -e 's/^Defaults    secure_path/#Defaults    secure_path/' /etc/sudoers
+    }
+)
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
