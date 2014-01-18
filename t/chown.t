@@ -2,8 +2,7 @@ use strict;
 use warnings;
 use t::Nukofs;
 use Path::Class;
-
-use Test::More tests => 2;
+use Test::More;
 
 t::Nukofs->reload;
 
@@ -30,4 +29,5 @@ subtest 'chown file' => sub {
     is $st->gid, 500, 'gid should be 500';
 };
 
+done_testing;
 
