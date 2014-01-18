@@ -10,7 +10,7 @@ subtest 'chown directory' => sub {
     # vagrant:vagrant = uid:500, gid:500
     my $dir = "/mnt/nukofs/dir";
 
-    ok dir($dir)->mkpath(), 'mkdir(2) should success';
+    dir($dir)->mkpath();
     ok ((chown 500, 500, $dir), 'chown(2) should success');
 
     my $st = dir($dir)->stat;
@@ -21,7 +21,7 @@ subtest 'chown directory' => sub {
 subtest 'chown file' => sub {
     my $file = "/mnt/nukofs/file";
 
-    ok file($file)->openw;
+    file($file)->openw;
     ok ((chown 500, 500, $file), 'chown(2) should success');
 
     my $st = file($file)->stat;

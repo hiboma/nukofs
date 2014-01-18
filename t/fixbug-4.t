@@ -10,7 +10,6 @@ t::Nukofs->reload;
 my $file = "/mnt/nukofs/regular-file.txt";
 
 file($file)->openw;
-ok stat $file, 'stat(2) should success';
 ok system("umount /mnt/nukofs") == 0, 'umount(2) should success';
 
 done_testing;
