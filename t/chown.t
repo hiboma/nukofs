@@ -1,8 +1,9 @@
 use strict;
 use warnings;
 use t::Nukofs;
-use Test::More tests => 8;
 use Path::Class;
+
+use Test::More tests => 8;
 
 t::Nukofs->reload;
 
