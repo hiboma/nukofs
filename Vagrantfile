@@ -5,6 +5,7 @@
 VAGRANTFILE_API_VERSION = "2"
 
 $script = <<SCRIPT
+grep -q "single-request-reopen" /etc/resolv.conf || echo "options single-request-reopen" >> /etc/resolv.conf
 rpm -q kernel-devel || rpm -ivh http://mirror.centos.org/centos/6/os/x86_64/Packages/kernel-devel-2.6.32-431.el6.x86_64.rpm
 which gcc || yum groupinstall -y 'Development Tools'
 sudo yum install -y perl-Test-Simple
