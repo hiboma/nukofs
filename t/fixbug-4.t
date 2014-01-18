@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use t::Nukofs;
 use Path::Class;
-
 use Test::More;
 
 t::Nukofs->reload;
