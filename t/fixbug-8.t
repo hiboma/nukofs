@@ -9,7 +9,7 @@ BEGIN {
 
 my $dir = "/mnt/nukofs/dir";
 
-ok mkdir $dir, 'mkdir(2) should success';
+ok ((mkdir $dir, 0755), 'mkdir(2) should success');
 ok rmdir $dir, 'rmdir(2) should success';
 
 END {
