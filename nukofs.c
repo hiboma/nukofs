@@ -30,8 +30,8 @@ static struct super_operations nukofs_super_operations = {
 static struct address_space_operations nukofs_address_space_operations = {
 	.readpage    = NULL,
 	.writepage   = NULL,
-	.write_begin = NULL,
-	.write_end   = NULL,
+	.write_begin = simple_write_begin,
+	.write_end   = simple_write_end,
 };
 
 static struct inode_operations nukofs_file_inode_operations = {
@@ -53,15 +53,14 @@ static const struct inode_operations nukofs_dir_inode_operations = {
 
 static struct file_operations nukofs_file_operations = {
 	.read        = NULL,
-	.open        = NULL,
-	.write       = NULL,
+	.write       = do_sync_write,
+	.aio_write   = generic_file_aio_write,
 	.release     = NULL,
 	.mmap        = NULL,
-	.splice_read = generic_file_splice_read,
-	.aio_read    = generic_file_aio_read,
-	.aio_write   = generic_file_aio_write,
-	.fsync       = simple_sync_file,
-	.llseek      = generic_file_llseek,
+	.splice_read = NULL,
+	.aio_read    = NULL,
+	.fsync       = NULL,
+	.llseek      = NULL,
 };
 
 /* static const struct vm_operations_struct nukofs_vm_operations = { */
@@ -98,6 +97,7 @@ struct inode *nukofs_get_inode(struct super_block *sb, int mode, dev_t dev)
 		case S_IFREG:
 			inode->i_op = &nukofs_file_inode_operations;
 			inode->i_fop = &nukofs_file_operations;
+			break;
 		case S_IFDIR:
 			inode->i_op = &nukofs_dir_inode_operations;
 			inode->i_fop = &simple_dir_operations;
