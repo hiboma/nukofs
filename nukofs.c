@@ -57,11 +57,11 @@ static struct file_operations nukofs_file_operations = {
 	.write       = NULL,
 	.release     = NULL,
 	.mmap        = NULL,
-	.splice_read = generic_file_splice_read,
-	.aio_read    = generic_file_aio_read,
-	.aio_write   = generic_file_aio_write,
-	.fsync       = simple_sync_file,
-	.llseek      = generic_file_llseek,
+	.splice_read = NULL,
+	.aio_read    = NULL,
+	.aio_write   = NULL,
+	.fsync       = NULL,
+	.llseek      = NULL,
 };
 
 /* static const struct vm_operations_struct nukofs_vm_operations = { */
