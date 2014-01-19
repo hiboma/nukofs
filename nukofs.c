@@ -53,13 +53,12 @@ static const struct inode_operations nukofs_dir_inode_operations = {
 
 static struct file_operations nukofs_file_operations = {
 	.read        = NULL,
-	.open        = NULL,
-	.write       = NULL,
+	.write       = do_sync_write,
+	.aio_write   = generic_file_aio_write,
 	.release     = NULL,
 	.mmap        = NULL,
 	.splice_read = NULL,
 	.aio_read    = NULL,
-	.aio_write   = NULL,
 	.fsync       = NULL,
 	.llseek      = NULL,
 };
