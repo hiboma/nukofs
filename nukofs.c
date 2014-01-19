@@ -98,6 +98,7 @@ struct inode *nukofs_get_inode(struct super_block *sb, int mode, dev_t dev)
 		case S_IFREG:
 			inode->i_op = &nukofs_file_inode_operations;
 			inode->i_fop = &nukofs_file_operations;
+			break;
 		case S_IFDIR:
 			inode->i_op = &nukofs_dir_inode_operations;
 			inode->i_fop = &simple_dir_operations;
