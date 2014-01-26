@@ -1,7 +1,6 @@
 use strict;
 use warnings;
 use t::Nukofs;
-use Filesys::Df;
 use Test::More;
 
 t::Nukofs->reload;
