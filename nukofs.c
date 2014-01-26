@@ -22,6 +22,7 @@ struct nukofs_inode_info {
 };
 
 static struct super_operations nukofs_super_operations = {
+	.statfs		= simple_statfs,
 	.alloc_inode	= nukofs_alloc_inode,
 	.destroy_inode	= nukofs_destroy_inode,
 	.put_super	= nukofs_put_super,
