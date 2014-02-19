@@ -48,7 +48,7 @@ static const struct inode_operations nukofs_dir_inode_operations = {
 	.mkdir		= nukofs_mkdir,
 	.rmdir		= simple_rmdir,
 	.mknod		= nukofs_mknod,
-	.rename		= NULL,
+	.rename		= simple_rename,
 };
 
 static struct file_operations nukofs_file_operations = {
