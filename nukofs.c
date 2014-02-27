@@ -29,7 +29,7 @@ static struct super_operations nukofs_super_operations = {
 };
 
 static struct address_space_operations nukofs_address_space_operations = {
-	.readpage    = NULL,
+	.readpage    = simple_readpage,
 	.writepage   = NULL,
 	.write_begin = simple_write_begin,
 	.write_end   = simple_write_end,
@@ -53,13 +53,13 @@ static const struct inode_operations nukofs_dir_inode_operations = {
 };
 
 static struct file_operations nukofs_file_operations = {
-	.read        = NULL,
+	.read        = do_sync_read,
 	.write       = do_sync_write,
 	.aio_write   = generic_file_aio_write,
 	.release     = NULL,
 	.mmap        = NULL,
 	.splice_read = NULL,
-	.aio_read    = NULL,
+	.aio_read    = generic_file_aio_read,
 	.fsync       = NULL,
 	.llseek      = NULL,
 };
