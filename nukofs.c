@@ -4,18 +4,19 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/backing-dev.h>
+#include <linux/pagemap.h>
 
 /* Pretend that each entry is of this size in directory's i_size */
 #define BOGO_DIRENT_SIZE 20
 
-static struct inode* nukofs_alloc_inode(struct super_block *sb);
+static struct inode *nukofs_alloc_inode(struct super_block *sb);
 static void nukofs_destroy_inode(struct inode *inode);
 static void nukofs_put_super(struct super_block *sb);
 static int nukofs_mknod(struct inode *dir, struct dentry *dentry,
 			int mode, dev_t dev);
 static int nukofs_create(struct inode *dir, struct dentry *dentry,
 			 int mode, struct nameidata *nd);
-static int nukofs_mkdir(struct inode *inode,struct dentry *dentry, int mode);
+static int nukofs_mkdir(struct inode *inode, struct dentry *dentry, int mode);
 
 struct nukofs_inode_info {
 	struct inode vfs_inode;
@@ -28,7 +29,47 @@ static struct super_operations nukofs_super_operations = {
 	.put_super	= nukofs_put_super,
 };
 
-static struct address_space_operations nukofs_address_space_operations = {
+static int simple_commit_write(struct file *file, struct page *page,
+			       unsigned from, unsigned to)
+{
+	struct inode *inode = page->mapping->host;
+	loff_t pos = ((loff_t)page->index << PAGE_CACHE_SHIFT) + to;
+
+	if (!PageUptodate(page))
+		SetPageUptodate(page);
+	/*
+	 * No need to use i_size_read() here, the i_size
+	 * cannot change under us because we hold the i_mutex.
+	 */
+	if (pos > inode->i_size)
+		i_size_write(inode, pos);
+	set_page_dirty(page);
+	return 0;
+}
+
+int simple_write_end(struct file *file, struct address_space *mapping,
+			loff_t pos, unsigned len, unsigned copied,
+			struct page *page, void *fsdata)
+{
+	unsigned from = pos & (PAGE_CACHE_SIZE - 1);
+
+	/* zero the stale part of the page if we did a short copy */
+	if (copied < len) {
+		void *kaddr = kmap_atomic(page, KM_USER0);
+		memset(kaddr + from + copied, 0, len - copied);
+		flush_dcache_page(page);
+		kunmap_atomic(kaddr, KM_USER0);
+	}
+
+	simple_commit_write(file, page, from, from+copied);
+
+	unlock_page(page);
+	page_cache_release(page);
+
+	return copied;
+}
+
+static const struct address_space_operations nukofs_address_space_operations = {
 	.readpage    = simple_readpage,
 	.writepage   = NULL,
 	.write_begin = simple_write_begin,
@@ -52,7 +93,7 @@ static const struct inode_operations nukofs_dir_inode_operations = {
 	.rename		= simple_rename,
 };
 
-static struct file_operations nukofs_file_operations = {
+static const struct file_operations nukofs_file_operations = {
 	.read        = do_sync_read,
 	.write       = do_sync_write,
 	.aio_write   = generic_file_aio_write,
@@ -102,7 +143,10 @@ struct inode *nukofs_get_inode(struct super_block *sb, int mode, dev_t dev)
 		case S_IFDIR:
 			inode->i_op = &nukofs_dir_inode_operations;
 			inode->i_fop = &simple_dir_operations;
-			/* directory inodes start off with i_nlink == 2 (for "." entry) */
+			/*
+			 * directory inodes start off with
+			 * i_nlink == 2 (for "." entry)
+			 */
 			inc_nlink(inode);
 			break;
 		case S_IFLNK:
@@ -113,10 +157,12 @@ struct inode *nukofs_get_inode(struct super_block *sb, int mode, dev_t dev)
 	return inode;
 }
 
-static struct inode* nukofs_alloc_inode(struct super_block *sb)
+static struct inode *nukofs_alloc_inode(struct super_block *sb)
 {
 	struct nukofs_inode_info *p;
-	p = (struct nukofs_inode_info *)kmem_cache_alloc(nukofs_inode_cachep, GFP_KERNEL);
+
+	p = (struct nukofs_inode_info *)
+		kmem_cache_alloc(nukofs_inode_cachep, GFP_KERNEL);
 	if (!p)
 		return NULL;
 
@@ -138,8 +184,8 @@ static void nukofs_init_once(void *foo)
 static void nukofs_init_inode_cachep(void)
 {
 	nukofs_inode_cachep = kmem_cache_create("nukofs_inode_cache",
-						sizeof(struct nukofs_inode_info),
-						0, SLAB_PANIC, nukofs_init_once);
+				  sizeof(struct nukofs_inode_info),
+				  0, SLAB_PANIC, nukofs_init_once);
 }
 
 static void nukofs_destroy_inode_cachep(void)
@@ -167,22 +213,23 @@ static int nukofs_fill_super(struct super_block *sb, void *data, int silent)
 		goto failed;
 
 	root = d_alloc_root(inode);
-	if(!root)
+	if (!root)
 		goto failed_iput;
 
 	sb->s_root = root;
-	
+
 	return 0;
 
-  failed_iput:
+failed_iput:
 	iput(inode);
 
-  failed:
+failed:
 	return err;
 }
 
 static int nukofs_get_sb(struct file_system_type *fs_type,
-			 int flags, const char *dev_name, void *data, struct vfsmount *mnt)
+			 int flags, const char *dev_name,
+			 void *data, struct vfsmount *mnt)
 {
 	return get_sb_nodev(fs_type, flags, data, nukofs_fill_super, mnt);
 }
@@ -231,17 +278,16 @@ static struct file_system_type nukofs_fs_type = {
 static int nukofs_init(void)
 {
 	int err = 0;
-	
+
 	err = bdi_init(&nukofs_backing_dev_info);
 	if (err)
 		return err;
-	
 
 	err = register_filesystem(&nukofs_fs_type);
 	if (err) {
 		bdi_destroy(&nukofs_backing_dev_info);
 		return err;
-    }
+	}
 
 	nukofs_init_inode_cachep();
 	return 0;
